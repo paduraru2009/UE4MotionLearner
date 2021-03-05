@@ -9,11 +9,17 @@ The purpose of this UE4 plugin is to capture motion data from character animatio
 
 ## How to use:
 
+
+### Step 0: Clone the repository inside YourProject/Plugins folder, reopen the project and you have a check to activate it.
+
 ### Step 1
 Grab the MotionLearner actor and drag it to your scene, like in the figure below: ![](https://github.com/paduraru2009/UE4MotionLearner/blob/master/Resources/Help_addComponent.PNG).
 
 ### Step 2:
 Configure the actor's properties if you wish to modify the camera resolution, frame rate, output paths, etc.
+Unless you customize things on your own you should:
+* name your characters as capchar_0, capchar_1, .... capchar_N 
+* name your cameras as capture_0, capture_1, .... capture_N
 One important step is to force the fixed frame rate in the the ProjectSettings to have a fixed frame. 
 For example if you want 30 fps set it is an in the figure below: ![](https://github.com/paduraru2009/UE4MotionLearner/blob/master/Resources/Help_fixedFrame.PNG).
 
