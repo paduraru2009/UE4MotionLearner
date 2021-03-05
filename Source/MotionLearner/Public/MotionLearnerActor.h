@@ -125,6 +125,8 @@ public:
 	UPROPERTY(EditAnywhere, Category="Customizations")
 	FString TargetCharacterPrefix = "capchar";
 
+	FString FolderOutputPath = "";
+
 	
 	UPROPERTY(EditAnywhere, Category = "Customizations")
 	int ResolutionWidth = 512;
@@ -147,11 +149,8 @@ public:
 	// Should save each frame ?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Customizations")
 	bool EnabledSavingEachFrame = false;
-
-	// Where is the output folders
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Customizations")
-	FString FolderOutputPath = "output";
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Customizations")
-	FString MotionBinaryFileName = TEXT("motiondata.bin");	
+	FString MotionBinaryFileName = TEXT("motiondata.bin");
 };

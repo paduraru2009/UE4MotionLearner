@@ -18,6 +18,7 @@
 #include "Serialization/BufferArchive.h"
 #include "Dom/JsonObject.h"
 #include "GameFramework/Character.h"
+#include "Serialization/JsonWriter.h"
 
 // Sets default values
 AMotionLearnerActor::AMotionLearnerActor()
@@ -26,6 +27,8 @@ AMotionLearnerActor::AMotionLearnerActor()
 	if (EnabledUpdated)
 		PrimaryActorTick.bCanEverTick = true;
 
+	FolderOutputPath = FPaths::Combine(FPaths::ProjectIntermediateDir(), TEXT("outputs"));
+	
 }
 
 // Called when the game starts or when spawned
@@ -122,67 +125,47 @@ void AMotionLearnerActor::saveCharactersMotionData()
 		}
 	}
 
-#if 0
-	
-						F
-						{
-							// Convert from RGBA float to R only array to store efficiently...
-							for (int y = 0; y < ResolutionHeight; y++)
-								for (int x = 0; x < ResolutionWidth; x++)
-								{
-									const int index = x + y * ResolutionWidth;
-									m_SurfDataDepth_Temp[index] = m_SurfDataTemp[index].R;
-								}
-							
-							Ar->Serialize(reinterpret_cast<uint8*>(m_SurfDataDepth_Temp.GetData()), m_SurfDataDepth_Temp.GetAllocatedSize());
-							
-	
-	delete Ar;
-							
-	// Step 0: First the bone map for each character
-	// 
-	
-	// https://answers.unrealengine.com/questions/341767/how-to-add-an-array-of-json-objects-to-a-json-obje.html
 
-#if 0
-	// Step 0: Create the bones array for the character
-	FJsonValueString b1Name = FJsonValueString("Bone1");
-	auto b2Name = MakeShareable(&b1Name);
-	//a.SetField("test", b2Name);
-	//TSharedPtr<FJsonValue> jsonObj = b1Name.AsObject()
-	//TArray<FJsonValueString> arrNames;
-	TArray< TSharedPtr<FJsonValue> > bonesArray;
-	bonesArray.Add(b2Name);
-	FJsonObject characterObject;
-	characterObject.SetArrayField("BonesMap", bonesArray);
+	// Step 1: save the map bones for each character
+	for (int characterIndex = 0; characterIndex < m_allCharactersToCapture.Num(); characterIndex++)
+	{
+		TArray<FName>& boneNamesMap = m_allCharactersToCapture[characterIndex].boneNames;
 
+		TSharedPtr<FJsonObject> characterBonesMap = MakeShareable(new FJsonObject);
+		for (int boneIndex = 0; boneIndex < boneNamesMap.Num(); boneIndex++)
+		{			
+			characterBonesMap->SetStringField(FString::FromInt(boneIndex), boneNamesMap[boneIndex].ToString());
+		}
+		
 
-	FQuat q0;
-	FVector l0;
-	
-	
-	//FJsonValueArray jsonArray(ObjArray);
-#endif
-	
+		FString filename = FString::Printf(TEXT("%s_bonesmap.json"), *m_allCharactersToCapture[characterIndex].actorName);
+		FString fullName = FPaths::Combine(FolderOutputPath, filename); FPaths::ProjectIntermediateDir();
+		FPaths::ValidatePath(fullName, &PathError);
+		FArchive* mapB_p = IFileManager::Get().CreateFileWriter(*fullName);
+		if (!mapB_p)
+			return;		
+		FArchive& mapB = *mapB_p;
 
+		FString OutputString;
+		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		FJsonSerializer::Serialize(characterBonesMap.ToSharedRef(), Writer);
 
-	//a.SetArrayField("BonesMap", m_SurfDataDepth_Temp);
+		mapB <<OutputString;
+		delete mapB_p;
 
-#if 0
-	// For each character motionch_X , X number
-	// a json file with:
-	// Bones map array
-	// 
-		void SetArrayField
-		(
-		    const FString & FieldName,
-		    const TArray < TSharedPtr < FJsonValue > > & Array
-		)
-#endif
-
-
-	// Step 1: Then the frames data for each character
-#endif
+		// We will use this FileManager to deal with the file.
+		IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+		
+	   // We use the LoadFileToString to load the file into
+	   if(FFileHelper::SaveStringToFile(OutputString,*fullName))
+	   {
+	      UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"),*OutputString);
+	   }
+	   else
+	   {
+	      UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+	   }
+	}	
 }
 
 
