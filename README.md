@@ -1,7 +1,7 @@
 # UE4MotionLearner
 
 ## Scope:
-The purpose of this UE4 plugin is to capture motion data from character animations and dump data on disk.
+The purpose of this UE4 plugin is to capture motion data from characters animations, depth and RGB from various camera placed in the world then dump data on disk. It can be used for an automatized deep learning data gathering for animation systems.
 
 ## What is able to do:
 * Record Characters motion - the skeletal animation SQT for each bone, character and frame.
