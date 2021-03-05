@@ -3,9 +3,12 @@
 ## Scope:
 The purpose of this UE4 plugin is to capture motion data from character animations and dump data on disk.
 
-## What is able todo:
-* Record Characters motion - the skeletal animation SQT for each bone, character and frame
+## What is able to do:
+* Record Characters motion - the skeletal animation SQT for each bone, character and frame.
 * Record RGB and depth camera images from fixed / mobile camera that you set in the scene.
+* Characters can have different skeletal meshes
+* Characters can appear dynamically on the scene (e.g. dissapear/spawn at various time moments)
+* Cameras can be either static or dynamic (following your characters). Our system will record things based on their location at each frame.
 
 ## How to use:
 
