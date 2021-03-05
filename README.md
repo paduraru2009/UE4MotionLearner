@@ -29,7 +29,7 @@ For example if you want 30 fps set it is an in the figure below: ![](https://git
 ### Step 3:
 Hit play/start game, do whatever you want in your scene, then stop. You will see output like in the figure below: ![](https://github.com/paduraru2009/UE4MotionLearner/blob/master/Resources/Help_foldersExp.PNG).
 
-Output definition:
+Output definition that you will find in **YourProject/Intermediate/outputs** folder:
 * motiondata.bin : contains the frames data, SQT for each bone and frame in world space, captured for all characters. Check void AMotionLearnerActor::saveCharactersMotionData() in AMotionLearnerActor.cpp to understand the binary format used.
 * capchar_X_bonesmap.json : json for each character containing the mapping, the index in the data above to the bone name.
 * Cam_X_FY_rgb.png for each camera index X and frame Y, contains the RGB from the cameras that you set point of view
