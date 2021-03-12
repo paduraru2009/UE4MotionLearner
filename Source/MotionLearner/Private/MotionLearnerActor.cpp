@@ -125,6 +125,8 @@ void AMotionLearnerActor::saveCharactersMotionData()
 		}
 	}
 
+	delete Ar_p;
+
 
 	// Step 1: save the map bones for each character
 	for (int characterIndex = 0; characterIndex < m_allCharactersToCapture.Num(); characterIndex++)
@@ -317,7 +319,7 @@ void AMotionLearnerActor::prepareCaptureComponentForCamera(ACameraActor* cameraA
 #ifndef USE_COLORANDDEPTH
 	FName sceneCompName_depth = FName(sceneCompName.ToString().Append("_depth"));
 	sceneCaptureComponent[1] = NewObject<USceneCaptureComponent2D>(cameraActor, sceneCompName_depth);
-	sceneCaptureComponent[0]->AttachToComponent(cameraActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	sceneCaptureComponent[1]->AttachToComponent(cameraActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	sceneCaptureComponent[1]->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 	check(sceneCaptureComponent[1]);
 	if (sceneCaptureComponent[1] == nullptr)
@@ -480,7 +482,7 @@ void AMotionLearnerActor::solveCamerasOutput()
 									m_SurfDataDepth_Temp[index] = m_SurfDataTemp[index].R;
 								}
 							
-							Ar->Serialize(reinterpret_cast<uint8*>(m_SurfDataDepth_Temp.GetData()), m_SurfDataDepth_Temp.GetAllocatedSize());
+							Ar->Serialize(m_SurfDataDepth_Temp.GetData(), m_SurfDataDepth_Temp.GetAllocatedSize());
 							
 							//FBufferArchive Buffer;
 							//Ar.Serialize((void*)PNGData.GetData(), PNGData.GetAllocatedSize());
