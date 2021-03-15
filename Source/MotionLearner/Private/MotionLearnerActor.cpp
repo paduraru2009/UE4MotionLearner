@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SceneCaptureComponent2D.h"
 //#include "MotionLearner/Public/MotionLearnerActor.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/SceneCapture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -311,6 +312,7 @@ void AMotionLearnerActor::prepareCaptureComponentForCamera(ACameraActor* cameraA
 	sceneCaptureComponent[0] = NewObject<USceneCaptureComponent2D>(cameraActor, sceneCompName);
 	sceneCaptureComponent[0]->AttachToComponent(cameraActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	sceneCaptureComponent[0]->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
+
 	check(sceneCaptureComponent[0]);	
 	if (sceneCaptureComponent[0] == nullptr)
 		return ;
@@ -328,6 +330,8 @@ void AMotionLearnerActor::prepareCaptureComponentForCamera(ACameraActor* cameraA
 
 	
 	// register and setup both
+	UCameraComponent* cameraComponent = cameraActor->GetCameraComponent();
+
 	for (int i = 0; i < 2; i++)
 	{
 		if (sceneCaptureComponent[i] == nullptr)
@@ -338,13 +342,18 @@ void AMotionLearnerActor::prepareCaptureComponentForCamera(ACameraActor* cameraA
 		sceneCaptureComponent[i]->bAutoActivate = true;
 		sceneCaptureComponent[i]->bCaptureOnMovement = false;
 		sceneCaptureComponent[i]->bCaptureEveryFrame = true;
+
+		// Apply original camera component values (projection type and fov /ortho width)
+		sceneCaptureComponent[i]->ProjectionType = cameraComponent->ProjectionMode;
+		sceneCaptureComponent[i]->FOVAngle = cameraComponent->FieldOfView;
+		sceneCaptureComponent[i]->OrthoWidth = cameraComponent->OrthoWidth;
 	}
 
 	// configure their capture sources
 #ifdef USE_COLORANDDEPTH
 	sceneCaptureComponent[0]->CaptureSource = SCS_SceneColorSceneDepth;
 #else
-	sceneCaptureComponent[0]->CaptureSource = SCS_FinalColorLDR; //SCS_SceneDepth;
+	sceneCaptureComponent[0]->CaptureSource = SCS_SceneColorHDR; //SCS_SceneDepth;
 	sceneCaptureComponent[1]->CaptureSource = SCS_SceneDepth; //SCS_DeviceDepth;
 #endif
 
@@ -365,10 +374,11 @@ void AMotionLearnerActor::prepareCaptureComponentForCamera(ACameraActor* cameraA
 	renderTarget[0]->InitCustomFormat(ResolutionWidth, ResolutionHeight, EPixelFormat::PF_FloatRGBA, false);
 	renderTarget[0]->RenderTargetFormat = RTF_RGBA16f;
 #else
-	renderTarget[0]->InitCustomFormat(ResolutionWidth, ResolutionHeight, EPixelFormat::PF_B8G8R8A8, false);
+	renderTarget[0]->InitAutoFormat(ResolutionWidth, ResolutionHeight);
 	renderTarget[0]->AddressX = TA_Wrap;
 	renderTarget[0]->AddressY = TA_Wrap;
-	renderTarget[0]->RenderTargetFormat = RTF_RGBA8;
+	//renderTarget[0]->RenderTargetFormat = RTF_RGBA8; // hopefully it will be PF_FloatRGBA or equiv. RTF_RGBA16f
+	check(renderTarget[0]->RenderTargetFormat == RTF_RGBA16f); // If not please change to custom format and fix the parameter to get this check valid !
 
 	renderTarget[1]->InitAutoFormat(ResolutionWidth, ResolutionHeight);//InitCustomFormat(ResolutionWidth, ResolutionHeight, EPixelFormat::PF_R32_FLOAT, false);
 	renderTarget[1]->AddressX = TA_Wrap;
@@ -456,18 +466,19 @@ void AMotionLearnerActor::solveCamerasOutput()
 				}
 				
 				FString additionalSuffix = sceneCamputerCompIndex == 0 ? "_rgb" : "_depth";
-				FString path_rgb = FString::Printf(TEXT("Cam_%02d_F%05d%s.png"), cameraCapture.index, m_frameCounter, *additionalSuffix);
+				FString extension = sceneCamputerCompIndex == 0 ? "hdr" : "bin";
+				FString fullfileName = FString::Printf(TEXT("Cam_%02d_F%05d%s.%s"), cameraCapture.index, m_frameCounter, *additionalSuffix, *extension);
 				
 				if (!cameraCapture.debug_savedOneFrame || EnabledSavingEachFrame)
 				{
 					if (sceneCamputerCompIndex == 0)
 					{						
-						UKismetRenderingLibrary::ExportRenderTarget(GetWorld(), sceneCapComp->TextureTarget, FolderOutputPath, *path_rgb);
+						UKismetRenderingLibrary::ExportRenderTarget(GetWorld(), sceneCapComp->TextureTarget, FolderOutputPath, *fullfileName);
 					}
 					else
 					{
 						// Depth case - custom save
-						FString TotalFileName = FPaths::Combine(FolderOutputPath, *path_rgb);
+						FString TotalFileName = FPaths::Combine(FolderOutputPath, *fullfileName);
 						FText PathError;
 						FPaths::ValidatePath(TotalFileName, &PathError);
 						FArchive* Ar = IFileManager::Get().CreateFileWriter(*TotalFileName);
